@@ -1,0 +1,44 @@
+[
+  {
+    "id": "q1",
+    "question": "What is Redis?",
+    "expected_answer": "Redis is an in-memory data structure store.",
+    "relevant_sources": ["sample.md", "sample.pdf"],
+    "answerable": true
+  },
+  {
+    "id": "q2",
+    "question": "What data structures does Redis support?",
+    "expected_answer": "Redis supports strings, lists, sets, sorted sets, and hashes.",
+    "relevant_sources": ["sample.md", "sample.pdf"],
+    "answerable": true
+  },
+  {
+    "id": "q3",
+    "question": "What are the common use cases of Redis?",
+    "expected_answer": "Redis is commonly used for caching, session management, and real-time analytics.",
+    "relevant_sources": ["sample.md"],
+    "answerable": true
+  },
+  {
+    "id": "q4",
+    "question": "Is Redis an in-memory data store?",
+    "expected_answer": "Yes. Redis is an in-memory data structure store.",
+    "relevant_sources": ["sample.md", "sample.pdf"],
+    "answerable": true
+  },
+  {
+    "id": "q5",
+    "question": "How does Redis guarantee data persistence after a server restart?",
+    "expected_answer": "The available documents do not provide information about Redis persistence.",
+    "relevant_sources": [],
+    "answerable": false
+  },
+  {
+    "id": "q6",
+    "question": "How does Kafka guarantee message ordering across partitions?",
+    "expected_answer": "The available documents do not contain information about Kafka.",
+    "relevant_sources": [],
+    "answerable": false
+  }
+]
