@@ -1,6 +1,7 @@
 
 from app.embeddings.embedding_service import EmbeddingService
-from app.retrieval.faiss_store import FAISSStore
+from app.retrieval.hybrid_retriever import HybridRetriever
+from app.retrieval.reranker import Reranker
 from app.generation.llm_service import LLMService
 
 
@@ -9,26 +10,31 @@ class RAGService:
     def __init__(
         self,
         embedding_service: EmbeddingService,
-        vector_store: FAISSStore,
+        hybrid_retriever: HybridRetriever,
+        reranker: Reranker,
         llm_service: LLMService,
     ):
         self.embedding_service = embedding_service
-        self.vector_store = vector_store
+        self.hybrid_retriever = hybrid_retriever
+        self.reranker = reranker
         self.llm_service = llm_service
 
-    def answer(self, question: str, top_k: int = 3) -> dict:
+    def answer(
+        self,
+        question: str,
+        top_k: int = 3,
+        retrieval_k: int = 10,
+    ) -> dict:
 
         # 1. Convert question into an embedding
         query_embedding = self.embedding_service.embed_text(question)
 
-        # 2. Retrieve relevant chunks
-        results = self.vector_store.search(query_embedding, top_k)
-        MIN_SIMILARITY_SCORE = 0.5
-        results = [
-            result
-            for result in results
-            if result["score"] >= MIN_SIMILARITY_SCORE
-        ]
+        # 2. Retrieve candidate chunks using hybrid search
+        results = self.hybrid_retriever.search(
+            query=question,
+            query_embedding=query_embedding,
+            top_k=retrieval_k,
+        )
 
         if not results:
             return {
@@ -36,7 +42,14 @@ class RAGService:
                 "sources": [],
             }
 
-        # 3. Build context and source references
+        # 3. Rerank retrieved chunks
+        results = self.reranker.rerank(
+            query=question,
+            results=results,
+            top_k=top_k,
+        )
+
+        # 4. Build context and source references
         context_parts = []
         sources = []
 
@@ -55,7 +68,7 @@ class RAGService:
 
         context = "\n\n".join(context_parts)
 
-        # 4. Ask the LLM to answer using retrieved context
+        # 5. Ask the LLM to answer using retrieved context
         system_prompt = """
         You are an engineering knowledge assistant.
 

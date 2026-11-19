@@ -1,0 +1,21 @@
+
+services:
+  api:
+    build: .
+    container_name: engineering-knowledge-assistant
+    ports:
+      - "8000:8000"
+
+    environment:
+      OLLAMA_BASE_URL: http://host.docker.internal:11434
+
+    volumes:
+      - ./documents:/app/documents
+      - ./storage:/app/storage
+      - huggingface-cache:/root/.cache/huggingface
+
+    restart: unless-stopped
+    init: true
+
+volumes:
+  huggingface-cache:

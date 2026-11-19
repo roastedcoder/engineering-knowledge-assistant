@@ -68,3 +68,72 @@ def test_reject_wrong_embedding_dimension(sample_data):
 
     with pytest.raises(ValueError):
         store.add(chunks, [[1.0, 0.0]])
+
+
+def test_remove_by_source_removes_matching_chunks():
+    store = FAISSStore(dimension=3)
+
+    chunks = [
+        Chunk("Redis one", {"source": "redis.md"}),
+        Chunk("Kafka one", {"source": "kafka.pdf"}),
+        Chunk("Redis two", {"source": "redis.md"}),
+    ]
+
+    embeddings = [
+        [1.0, 0.0, 0.0],
+        [0.0, 1.0, 0.0],
+        [0.0, 0.0, 1.0],
+    ]
+
+    store.add(chunks, embeddings)
+
+    removed_count = store.remove_by_source("kafka.pdf")
+
+    assert removed_count == 1
+    assert store.index.ntotal == 2
+    assert len(store.chunks) == 2
+
+    assert [
+        chunk.content for chunk in store.chunks
+    ] == ["Redis one", "Redis two"]
+
+
+def test_remove_by_source_returns_zero_for_missing_source():
+    store = FAISSStore(dimension=3)
+
+    chunks = [
+        Chunk("Redis one", {"source": "redis.md"})
+    ]
+
+    store.add(chunks, [[1.0, 0.0, 0.0]])
+
+    removed_count = store.remove_by_source("kafka.pdf")
+
+    assert removed_count == 0
+    assert store.index.ntotal == 1
+    assert len(store.chunks) == 1
+
+
+def test_remove_by_source_removes_all_chunks_of_document():
+    store = FAISSStore(dimension=3)
+
+    chunks = [
+        Chunk("Kafka one", {"source": "kafka.pdf"}),
+        Chunk("Redis one", {"source": "redis.md"}),
+        Chunk("Kafka two", {"source": "kafka.pdf"}),
+    ]
+
+    embeddings = [
+        [1.0, 0.0, 0.0],
+        [0.0, 1.0, 0.0],
+        [0.0, 0.0, 1.0],
+    ]
+
+    store.add(chunks, embeddings)
+
+    removed_count = store.remove_by_source("kafka.pdf")
+
+    assert removed_count == 2
+    assert store.index.ntotal == 1
+    assert len(store.chunks) == 1
+    assert store.chunks[0].metadata["source"] == "redis.md"

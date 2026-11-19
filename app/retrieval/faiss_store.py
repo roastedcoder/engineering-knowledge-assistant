@@ -71,3 +71,29 @@ class FAISSStore:
             })
 
         return results
+
+    
+    def remove_by_source(self, source: str) -> int:
+
+        # Find the positions of chunks belonging to this source
+        positions = [
+            index
+            for index, chunk in enumerate(self.chunks)
+            if chunk.metadata.get("source") == source
+        ]
+
+        if not positions:
+            return 0
+
+        # Remove the corresponding vectors from FAISS
+        ids = np.asarray(positions, dtype="int64")
+        removed_count = self.index.remove_ids(ids)
+
+        # Remove the same chunks from our Python list
+        self.chunks = [
+            chunk
+            for chunk in self.chunks
+            if chunk.metadata.get("source") != source
+        ]
+
+        return removed_count
